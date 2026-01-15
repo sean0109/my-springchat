@@ -23,7 +23,7 @@
         const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
         const wsUrl = `${wsProtocol}://${location.host}/ws/chat`;
         const ws = new WebSocket(wsUrl);
-        //const ws = new WebSocket("ws://localhost:8080/ws/chat");
+        //const ws = new WebSocket("ws://localhost:8080/ws/chat"); // 로컬 실행환경에서만 작동
         ws.onopen = () => console.log("connected");
 
         ws.onmessage = (e) => {
