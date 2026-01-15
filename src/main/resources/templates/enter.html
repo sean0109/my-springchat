@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Enter</title>
+    <script>
+
+        let enterBtn;
+        let error;
+        let nameInput;
+
+        // document Ready
+        document.addEventListener("DOMContentLoaded", function(){
+            enterBtn = document.getElementById("enterBtn");
+            error = document.getElementById("error");
+            nameInput = document.getElementById("nameInput");
+
+            // 이벤트 리스너 등록
+            enterBtn.addEventListener("click", enter);
+            nameInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") enter();
+            });
+        });
+
+
+        function enter() {
+            const name = nameInput.value.trim();
+            if (!name) {
+                error.textContent = "닉네임을 입력해야 입장이 가능합니다.";
+                nameInput.focus();
+                return;
+            }
+
+            // 닉네임을 브라우저 세션에 저장
+            sessionStorage.setItem("nickname", name);   // 브라우저 세션 저장
+
+            // 서버사이드에서 검증할 변수, 닉네임 없을 경우 redirect
+            const url = "/chat";
+            const params = {nickname : name};
+
+            postSend(url, params);
+        }
+
+        // 닉네임 파라미터 post 전송
+        function postSend(url, params) {
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = url;
+
+            for (const key in params) {
+                if (params.hasOwnProperty(key)) {
+                    const input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = key;
+                    input.value = params[key];
+                    form.appendChild(input);
+                }
+            }
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+</head>
+<body>
+<h2>닉네임 입력</h2>
+
+<input id="nameInput" type="text" placeholder="닉네임" />
+<button id="enterBtn">입장</button>
+
+<p id="error" style="color:red;"></p>
+</body>
+</html>
