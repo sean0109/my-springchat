@@ -1,54 +1,169 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Spring Chat</title>
 
-    <script>
+    <style>
+        * { box-sizing: border-box; }
 
-        const nickName = sessionStorage.getItem("nickname");    // 닉네임
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            background: #f6f7f9;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 720px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+        }
+
+        .chat-header {
+            background: #fff;
+            border: 1px solid #e6e8ec;
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        /* 메시지 영역: 화면 높이에 맞춰 자동으로 늘어나게 */
+        #messages {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #e6e8ec;
+            border-radius: 16px;
+            padding: 12px;
+            overflow-y: auto;
+            line-height: 1.5;
+            font-size: 16px;
+            word-break: break-word;
+        }
+
+        /* 메시지 한 줄 스타일(기본) */
+        .msg {
+            padding: 8px 10px;
+            border-radius: 12px;
+            margin: 6px 0;
+            background: #f1f5f9;
+        }
+
+        /* 입력 영역 */
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            background: #fff;
+            border: 1px solid #e6e8ec;
+            border-radius: 16px;
+            padding: 12px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px 14px;
+            font-size: 18px;
+            border-radius: 12px;
+            border: 1px solid #cfd6df;
+            outline: none;
+            min-width: 0; /* flex에서 줄어들 수 있게 */
+        }
+
+        #messageInput:focus {
+            border-color: #7aa7ff;
+        }
+
+        #sendMessage {
+            padding: 12px 16px;
+            font-size: 18px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: #64CD3C;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        #sendMessage:active {
+            transform: translateY(1px);
+        }
+
+        /* 모바일에서 더 큼직하게 */
+        @media (max-width: 480px) {
+            .chat-container { padding: 12px; }
+            .chat-header h2 { font-size: 20px; }
+            #messages { font-size: 17px; }
+            #messageInput, #sendMessage { font-size: 20px; }
+        }
+    </style>
+
+    <script>
+        const nickName = sessionStorage.getItem("nickname"); // 닉네임
 
         document.addEventListener("DOMContentLoaded", function(){
-
             const input = document.getElementById("messageInput");
+
             input.addEventListener("keydown", function(e) {
                 if (e.key === "Enter") {
                     sendMessage();
                 }
             });
-        });
 
-        let params = new URLSearchParams();
+            input.focus();
+        });
 
         const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
         const wsUrl = `${wsProtocol}://${location.host}/ws/chat`;
         const ws = new WebSocket(wsUrl);
-        //const ws = new WebSocket("ws://localhost:8080/ws/chat"); // 로컬 실행환경에서만 작동
         ws.onopen = () => console.log("connected");
 
         ws.onmessage = (e) => {
             const div = document.getElementById("messages");
-            div.innerHTML += `<div>${e.data}</div>`;
+
+            // XSS 방지까지 완벽하진 않지만, 일단 구조 분리해서 스타일 적용 가능하게
+            const line = document.createElement("div");
+            line.className = "msg";
+            line.textContent = e.data;
+
+            div.appendChild(line);
             div.scrollTop = div.scrollHeight;
         };
 
         function sendMessage() {
             const input = document.getElementById("messageInput");
-            if (ws.readyState === WebSocket.OPEN && input.value) {
-                ws.send(nickName + " : " + input.value);
+            const text = input.value?.trim();
+            if (ws.readyState === WebSocket.OPEN && text) {
+                ws.send(nickName + " : " + text);
                 input.value = "";
+                input.focus();
             }
         }
-
     </script>
 </head>
+
 <body>
-<h2>WebSocket Chat</h2>
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>WebSocket Chat</h2>
+    </div>
 
-<div id="messages" style="border:1px solid #ccc; height:200px; overflow:auto;"></div>
+    <div id="messages"></div>
 
-<input type="text" id="messageInput" placeholder="메시지 입력"/>
-<button id="sendMessage" onclick="sendMessage()">전송</button>
-
+    <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="메시지 입력"/>
+        <button id="sendMessage" onclick="sendMessage()">전송</button>
+    </div>
+</div>
 </body>
 </html>
