@@ -116,11 +116,11 @@
 
             input.addEventListener("keydown", function(e) {
                 if (e.key === "Enter") {
+                    e.preventDefault();
                     sendMessage();
                 }
             });
-
-            input.focus();
+            //input.focus();    // 자동 키보드 레이아웃 활성화
         });
 
         const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
@@ -146,7 +146,8 @@
             if (ws.readyState === WebSocket.OPEN && text) {
                 ws.send(nickName + " : " + text);
                 input.value = "";
-                input.focus();
+                //input.focus();
+                input.blur();       // 자동으로 키보드 레이아웃 내리기
             }
         }
     </script>
